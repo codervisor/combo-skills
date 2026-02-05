@@ -12,7 +12,8 @@
  * TODO: Integrate actual LLM provider (OpenAI, Anthropic, etc.)
  */
 
-import type { ResolvedComboSkill, CompiledSkill } from '../types.js';
+import type { ResolvedComboSkill, CompiledSkill, Modifier } from '../types.js';
+import { validateModifiers, type ModifierValidationResult } from './modifierValidator.js';
 
 /**
  * Options for LLM-driven compilation.
@@ -38,16 +39,30 @@ export interface LLMCompilerOptions {
    * Enable verbose logging of LLM interactions.
    */
   verbose?: boolean;
+
+  /**
+   * Whether to validate modifiers before compilation.
+   * Default: true
+   */
+  validateModifiers?: boolean;
+}
+
+/**
+ * Result of modifier validation during compilation.
+ */
+export interface CompilationValidation {
+  modifiers: ModifierValidationResult | null;
 }
 
 /**
  * Compiles a resolved combo skill into a skill artifact using LLM synthesis.
  *
  * The compilation process:
- * 1. Build a prompt from the combo definition and resolved skills
- * 2. Send to LLM for synthesis
- * 3. Parse LLM response into skill artifact structure
- * 4. Validate output format
+ * 1. Validate modifiers against primitives
+ * 2. Build a prompt from the combo definition and resolved skills
+ * 3. Send to LLM for synthesis
+ * 4. Parse LLM response into skill artifact structure
+ * 5. Validate output format
  *
  * @param combo - Resolved combo skill with all skill metadata
  * @param options - Compiler options
@@ -57,11 +72,24 @@ export async function compileWithLLM(
   combo: ResolvedComboSkill,
   options: LLMCompilerOptions = {}
 ): Promise<CompiledSkill> {
-  const { verbose = false } = options;
+  const { verbose = false, validateModifiers: shouldValidate = true } = options;
 
   if (verbose) {
     console.log(`[llmCompiler] Starting synthesis for: ${combo.name}`);
     console.log(`[llmCompiler] Using ${combo.resolvedSkills.length} skills`);
+  }
+
+  // Validate modifiers if present
+  if (shouldValidate && combo.modifiers && combo.modifiers.length > 0) {
+    const validation = validateModifiers(combo.modifiers, combo.primitives);
+    if (!validation.valid) {
+      throw new Error(
+        `Modifier validation failed:\n${validation.errors.join('\n')}`
+      );
+    }
+    if (verbose && validation.warnings.length > 0) {
+      console.log(`[llmCompiler] Modifier warnings:\n${validation.warnings.join('\n')}`);
+    }
   }
 
   // Build the synthesis prompt
@@ -111,7 +139,8 @@ export async function compileWithLLM(
  * 1. System context about skill synthesis
  * 2. The combo skill definition
  * 3. Resolved skill metadata
- * 4. Output format instructions
+ * 4. Modifier behaviors
+ * 5. Output format instructions
  */
 function buildSynthesisPrompt(combo: ResolvedComboSkill): string {
   const skillsSection = combo.resolvedSkills
@@ -133,6 +162,17 @@ Assumptions: ${combo.constraints.assumptions?.join('; ') ?? 'None specified'}
 `
     : '';
 
+  const modifiersSection = combo.modifiers && combo.modifiers.length > 0
+    ? `
+## Modifiers
+
+The following cross-cutting behaviors are applied:
+${combo.modifiers.map((m) => `- ${formatModifier(m)}`).join('\n')}
+
+These modifiers affect how the skill executes (e.g., retry on failure, caching, timeouts).
+`
+    : '';
+
   return `
 You are synthesizing a new agent skill by composing existing skills.
 
@@ -150,6 +190,7 @@ ${combo.intent}
 ${skillsSection}
 
 ${constraintsSection}
+${modifiersSection}
 
 ## Instructions
 
@@ -158,12 +199,30 @@ Generate a SKILL.md file that:
 2. Explains how the component skills work together
 3. Provides usage examples
 4. Documents any limitations or edge cases
+5. Describes the behavior modifications applied by modifiers
 
 The output should be a complete, standalone skill that an agent can use
 without needing to understand the underlying composition.
 
 Output the SKILL.md content directly, starting with a heading.
 `.trim();
+}
+
+/**
+ * Format a modifier for display in prompts or documentation.
+ */
+function formatModifier(modifier: Modifier): string {
+  if (typeof modifier === 'string') {
+    return modifier;
+  }
+  const keys = Object.keys(modifier);
+  if (keys.length === 0) return '(empty modifier)';
+  const type = keys[0];
+  const config = (modifier as Record<string, unknown>)[type];
+  if (!config || Object.keys(config as object).length === 0) {
+    return type;
+  }
+  return `${type}: ${JSON.stringify(config)}`;
 }
 
 /**
@@ -182,6 +241,15 @@ ${combo.constraints.ordering.map((o) => `1. ${o}`).join('\n')}
 `
     : '';
 
+  const modifiersSection = combo.modifiers && combo.modifiers.length > 0
+    ? `
+## Behavior Modifiers
+
+The following cross-cutting behaviors are applied to this skill:
+${combo.modifiers.map((m) => `- ${formatModifier(m)}`).join('\n')}
+`
+    : '';
+
   return `# ${combo.name}
 
 ${combo.description}
@@ -196,6 +264,7 @@ a higher-level goal.
 ${skillsList}
 
 ${orderingSection}
+${modifiersSection}
 
 ## Intent
 

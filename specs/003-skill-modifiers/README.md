@@ -1,14 +1,20 @@
 ---
-status: planned
+status: complete
 created: 2026-02-05
 priority: high
-parent: 001-tailwind-style-skills-architecture
 tags:
 - architecture
 - modifiers
 - cross-cutting
 created_at: 2026-02-05T06:21:58.913129997Z
-updated_at: 2026-02-05T06:21:58.913129997Z
+updated_at: 2026-02-05T06:57:47.361587942Z
+completed_at: 2026-02-05T06:57:47.361587942Z
+transitions:
+- status: in-progress
+  at: 2026-02-05T06:51:42.797400565Z
+- status: complete
+  at: 2026-02-05T06:57:47.361587942Z
+parent: 001-tailwind-style-skills-architecture
 ---
 
 # Skill Modifiers
@@ -85,20 +91,20 @@ At synthesis time:
 
 ## Plan
 
-- [ ] Define modifier schema with both prefix and structured forms
-- [ ] Document modifier semantics and stacking rules
-- [ ] Identify modifier/primitive compatibility matrix
-- [ ] Add `modifiers` field to combo-skill schema
-- [ ] Implement modifier validation in compiler
-- [ ] Create examples showing modifier composition
+- [x] Define modifier schema with both prefix and structured forms
+- [x] Document modifier semantics and stacking rules
+- [x] Identify modifier/primitive compatibility matrix
+- [x] Add `modifiers` field to combo-skill schema
+- [x] Implement modifier validation in compiler
+- [x] Create examples showing modifier composition
 
 ## Test
 
-- [ ] Modifiers parse correctly (prefix and structured)
-- [ ] Stacking order is preserved
-- [ ] Incompatible modifiers are detected
-- [ ] Synthesized skills include modifier behavior
-- [ ] All proposed modifiers have clear, testable semantics
+- [x] Modifiers parse correctly (prefix and structured)
+- [x] Stacking order is preserved
+- [x] Incompatible modifiers are detected
+- [x] Synthesized skills include modifier behavior
+- [x] All proposed modifiers have clear, testable semantics
 
 ## Notes
 
@@ -119,3 +125,11 @@ Tailwind variants modify *appearance* based on state. Our modifiers modify *beha
 | `sm:hidden` | `timeout:30s` |
 
 The mental model transfers: "this behavior, with this modification"
+
+### Implementation Complete
+
+- Schema updated: [combo-skill.schema.json](../../schemas/combo-skill.schema.json)
+- Types updated: [src/types.ts](../../src/types.ts)
+- Modifier validator: [src/compiler/modifierValidator.ts](../../src/compiler/modifierValidator.ts)
+- Documentation: [docs/modifiers.md](../../docs/modifiers.md)
+- Example updated: [extract-table-from-web.combo.yaml](../../examples/extract-table-from-web.combo.yaml)

@@ -5,6 +5,7 @@
  * - Combo skill definitions (input)
  * - Resolved skills (intermediate)
  * - Compiled skills (output)
+ * - Modifiers (cross-cutting behaviors)
  */
 
 /**
@@ -12,6 +13,134 @@
  * These are the fundamental actions that skills can perform.
  */
 export type SkillPrimitive = 'read' | 'write' | 'search' | 'execute' | 'transform';
+
+/**
+ * Available modifier types for cross-cutting behaviors.
+ */
+export type ModifierType =
+  | 'retry'
+  | 'cache'
+  | 'timeout'
+  | 'auth'
+  | 'rate-limit'
+  | 'log'
+  | 'fallback'
+  | 'batch'
+  | 'parallel'
+  | 'dry-run';
+
+/**
+ * Retry modifier configuration.
+ */
+export interface RetryModifierConfig {
+  attempts?: number;
+  backoff?: 'linear' | 'exponential' | 'fixed';
+  delay?: string;
+}
+
+/**
+ * Cache modifier configuration.
+ */
+export interface CacheModifierConfig {
+  ttl?: string;
+  key?: string;
+}
+
+/**
+ * Timeout modifier configuration.
+ */
+export interface TimeoutModifierConfig {
+  duration?: string;
+}
+
+/**
+ * Auth modifier configuration.
+ */
+export interface AuthModifierConfig {
+  type?: 'bearer' | 'basic' | 'api-key' | 'oauth2';
+  source?: string;
+}
+
+/**
+ * Rate limit modifier configuration.
+ */
+export interface RateLimitModifierConfig {
+  requests?: number;
+  window?: string;
+}
+
+/**
+ * Log modifier configuration.
+ */
+export interface LogModifierConfig {
+  level?: 'debug' | 'info' | 'warn' | 'error';
+  include?: Array<'input' | 'output' | 'timing' | 'errors'>;
+}
+
+/**
+ * Fallback modifier configuration.
+ */
+export interface FallbackModifierConfig {
+  skill?: string;
+  value?: unknown;
+}
+
+/**
+ * Batch modifier configuration.
+ */
+export interface BatchModifierConfig {
+  size?: number;
+  delay?: string;
+}
+
+/**
+ * Parallel modifier configuration.
+ */
+export interface ParallelModifierConfig {
+  concurrency?: number;
+}
+
+/**
+ * Dry-run modifier configuration.
+ */
+export interface DryRunModifierConfig {
+  log?: boolean;
+}
+
+/**
+ * Structured modifier with detailed configuration.
+ */
+export interface StructuredModifier {
+  retry?: RetryModifierConfig;
+  cache?: CacheModifierConfig;
+  timeout?: TimeoutModifierConfig;
+  auth?: AuthModifierConfig;
+  'rate-limit'?: RateLimitModifierConfig;
+  log?: LogModifierConfig;
+  fallback?: FallbackModifierConfig;
+  batch?: BatchModifierConfig;
+  parallel?: ParallelModifierConfig;
+  'dry-run'?: DryRunModifierConfig;
+}
+
+/**
+ * Prefix-style modifier string (e.g., 'retry:3', 'cache:5m').
+ */
+export type PrefixModifier = string;
+
+/**
+ * A modifier can be either prefix-style or structured.
+ */
+export type Modifier = PrefixModifier | StructuredModifier;
+
+/**
+ * Parsed modifier after normalization.
+ */
+export interface ParsedModifier {
+  type: ModifierType;
+  config: Record<string, unknown>;
+  raw: string | StructuredModifier;
+}
 
 /**
  * Reference to a skill in a combo skill definition.
@@ -42,6 +171,11 @@ export interface SkillReference {
    * Primitive capability categories for this skill.
    */
   primitives?: SkillPrimitive[];
+
+  /**
+   * Modifiers applied to this specific skill.
+   */
+  modifiers?: Modifier[];
 }
 
 /**
@@ -106,6 +240,11 @@ export interface ComboSkillDefinition {
    * Primitive capability categories used by this combo skill.
    */
   primitives?: SkillPrimitive[];
+
+  /**
+   * Cross-cutting behavior modifiers applied to the entire combo skill.
+   */
+  modifiers?: Modifier[];
 
   /**
    * List of skills that compose this combo.

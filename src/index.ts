@@ -32,6 +32,14 @@ export type * from './types.js';
 export { compileWithLLM } from './compiler/llmCompiler.js';
 export { resolveDependencyGraph, validateConstraints } from './compiler/graphResolver.js';
 export { resolveSkills, resolveSkill, clearCache } from './registry/skillsResolver.js';
+export {
+  validateModifiers,
+  parseModifier,
+  isModifierCompatible,
+  getCompatibleModifiers,
+  MODIFIER_TYPES,
+  MODIFIER_PRIMITIVE_COMPATIBILITY,
+} from './compiler/modifierValidator.js';
 
 /**
  * Options for the compile function.

@@ -5,6 +5,92 @@
   "description": "Schema for defining combo skills that compose multiple existing skills",
   "type": "object",
   "required": ["name", "description", "skills", "intent"],
+  "definitions": {
+    "modifierType": {
+      "type": "string",
+      "enum": ["retry", "cache", "timeout", "auth", "rate-limit", "log", "fallback", "batch", "parallel", "dry-run"]
+    },
+    "prefixModifier": {
+      "type": "string",
+      "description": "Prefix-style modifier, e.g., 'retry:3', 'cache:5m', 'timeout:30s'",
+      "pattern": "^(retry|cache|timeout|auth|rate-limit|log|fallback|batch|parallel|dry-run)(:[^:]+)?$"
+    },
+    "structuredModifier": {
+      "type": "object",
+      "description": "Structured modifier with detailed configuration",
+      "properties": {
+        "retry": {
+          "type": "object",
+          "properties": {
+            "attempts": { "type": "integer", "minimum": 1, "maximum": 10, "default": 3 },
+            "backoff": { "type": "string", "enum": ["linear", "exponential", "fixed"], "default": "exponential" },
+            "delay": { "type": "string", "description": "Initial delay, e.g., '1s', '500ms'", "pattern": "^\\d+(ms|s|m)$" }
+          }
+        },
+        "cache": {
+          "type": "object",
+          "properties": {
+            "ttl": { "type": "string", "description": "Time-to-live, e.g., '5m', '1h'", "pattern": "^\\d+(s|m|h|d)$" },
+            "key": { "type": "string", "description": "Cache key template with ${input.*} placeholders" }
+          }
+        },
+        "timeout": {
+          "type": "object",
+          "properties": {
+            "duration": { "type": "string", "description": "Timeout duration, e.g., '30s', '5m'", "pattern": "^\\d+(ms|s|m)$" }
+          }
+        },
+        "auth": {
+          "type": "object",
+          "properties": {
+            "type": { "type": "string", "enum": ["bearer", "basic", "api-key", "oauth2"] },
+            "source": { "type": "string", "description": "Environment variable or secret name" }
+          }
+        },
+        "rate-limit": {
+          "type": "object",
+          "properties": {
+            "requests": { "type": "integer", "minimum": 1, "description": "Maximum requests per window" },
+            "window": { "type": "string", "description": "Time window, e.g., '1m', '1h'", "pattern": "^\\d+(s|m|h)$" }
+          }
+        },
+        "log": {
+          "type": "object",
+          "properties": {
+            "level": { "type": "string", "enum": ["debug", "info", "warn", "error"], "default": "info" },
+            "include": { "type": "array", "items": { "type": "string", "enum": ["input", "output", "timing", "errors"] } }
+          }
+        },
+        "fallback": {
+          "type": "object",
+          "properties": {
+            "skill": { "type": "string", "description": "Alternative skill to use on failure" },
+            "value": { "description": "Static fallback value on failure" }
+          }
+        },
+        "batch": {
+          "type": "object",
+          "properties": {
+            "size": { "type": "integer", "minimum": 1, "description": "Batch size for grouped invocations" },
+            "delay": { "type": "string", "description": "Delay between batches", "pattern": "^\\d+(ms|s)$" }
+          }
+        },
+        "parallel": {
+          "type": "object",
+          "properties": {
+            "concurrency": { "type": "integer", "minimum": 1, "maximum": 100, "default": 5, "description": "Maximum concurrent executions" }
+          }
+        },
+        "dry-run": {
+          "type": "object",
+          "properties": {
+            "log": { "type": "boolean", "default": true, "description": "Log simulated actions" }
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  },
   "properties": {
     "name": {
       "type": "string",
@@ -33,6 +119,16 @@
         "enum": ["read", "write", "search", "execute", "transform"]
       },
       "uniqueItems": true
+    },
+    "modifiers": {
+      "type": "array",
+      "description": "Cross-cutting behavior modifiers applied to this skill. Supports prefix syntax (e.g., 'retry:3') or structured objects.",
+      "items": {
+        "oneOf": [
+          { "$ref": "#/definitions/prefixModifier" },
+          { "$ref": "#/definitions/structuredModifier" }
+        ]
+      }
     },
     "skills": {
       "type": "array",
@@ -67,6 +163,16 @@
               "enum": ["read", "write", "search", "execute", "transform"]
             },
             "uniqueItems": true
+          },
+          "modifiers": {
+            "type": "array",
+            "description": "Modifiers applied to this specific skill",
+            "items": {
+              "oneOf": [
+                { "$ref": "#/definitions/prefixModifier" },
+                { "$ref": "#/definitions/structuredModifier" }
+              ]
+            }
           }
         }
       }

@@ -19,11 +19,21 @@ primitives:
   - read      # fetch webpage content
   - transform # parse, extract, and convert data
 
+# Cross-cutting behavior modifiers applied to the entire skill
+modifiers:
+  - retry:3           # retry failed operations up to 3 times
+  - timeout:30s       # fail if any operation takes longer than 30s
+  - cache:5m          # cache successful results for 5 minutes
+  - log:info          # emit info-level logs for observability
+
 skills:
   - name: fetch-webpage
     from: skills.sh
     alias: fetch
     primitives: [read]
+    modifiers:
+      - timeout:10s             # individual timeout for fetch
+      - rate-limit:10/m         # respect rate limits
 
   - name: parse-html
     from: skills.sh
@@ -34,6 +44,9 @@ skills:
     from: skills.sh
     alias: extract
     primitives: [transform]
+    modifiers:
+      - fallback:
+          value: []             # return empty array if no table found
 
   - name: convert-to-csv
     from: skills.sh
