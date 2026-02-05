@@ -8,6 +8,12 @@
  */
 
 /**
+ * Primitive capability categories for skills.
+ * These are the fundamental actions that skills can perform.
+ */
+export type SkillPrimitive = 'read' | 'write' | 'search' | 'execute' | 'transform';
+
+/**
  * Reference to a skill in a combo skill definition.
  */
 export interface SkillReference {
@@ -31,6 +37,11 @@ export interface SkillReference {
    * Local alias for referencing in constraints.
    */
   alias?: string;
+
+  /**
+   * Primitive capability categories for this skill.
+   */
+  primitives?: SkillPrimitive[];
 }
 
 /**
@@ -90,6 +101,11 @@ export interface ComboSkillDefinition {
    * Semantic version.
    */
   version?: string;
+
+  /**
+   * Primitive capability categories used by this combo skill.
+   */
+  primitives?: SkillPrimitive[];
 
   /**
    * List of skills that compose this combo.

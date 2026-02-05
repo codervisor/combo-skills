@@ -25,6 +25,15 @@
       "pattern": "^\\d+\\.\\d+\\.\\d+$",
       "default": "0.1.0"
     },
+    "primitives": {
+      "type": "array",
+      "description": "Primitive capability categories used by this combo skill",
+      "items": {
+        "type": "string",
+        "enum": ["read", "write", "search", "execute", "transform"]
+      },
+      "uniqueItems": true
+    },
     "skills": {
       "type": "array",
       "description": "List of skills that compose this combo skill",
@@ -49,6 +58,15 @@
           "alias": {
             "type": "string",
             "description": "Local alias for referencing this skill in constraints"
+          },
+          "primitives": {
+            "type": "array",
+            "description": "Primitive capability categories for this skill",
+            "items": {
+              "type": "string",
+              "enum": ["read", "write", "search", "execute", "transform"]
+            },
+            "uniqueItems": true
           }
         }
       }

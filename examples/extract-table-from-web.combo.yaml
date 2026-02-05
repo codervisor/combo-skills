@@ -14,22 +14,31 @@ description: |
   Handles standard HTML tables and can follow pagination if present.
   Useful for scraping public data tables, price lists, or documentation tables.
 
+# Primitive capability categories used by this combo skill
+primitives:
+  - read      # fetch webpage content
+  - transform # parse, extract, and convert data
+
 skills:
   - name: fetch-webpage
     from: skills.sh
     alias: fetch
+    primitives: [read]
 
   - name: parse-html
     from: skills.sh
     alias: parse
+    primitives: [transform]
 
   - name: extract-table
     from: skills.sh
     alias: extract
+    primitives: [transform]
 
   - name: convert-to-csv
     from: skills.sh
     alias: csv
+    primitives: [transform]
 
 intent: |
   Given a URL, fetch the web page content, parse its HTML structure,
