@@ -1,0 +1,41 @@
+{
+  "name": "combo-skills",
+  "version": "0.1.0",
+  "description": "Composition layer for combining agent skills into higher-level combo skills",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "combo-skills": "./dist/cli/combo-skills.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "lint": "eslint src cli --ext .ts",
+    "test": "node --test",
+    "combo-skills": "node dist/cli/combo-skills.js"
+  },
+  "keywords": [
+    "agent",
+    "skills",
+    "composition",
+    "llm",
+    "ai"
+  ],
+  "author": "",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/codervisor/combo-skills.git"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "yaml": "^2.3.4"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "typescript": "^5.3.0"
+  }
+}

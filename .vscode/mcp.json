@@ -1,0 +1,13 @@
+{
+	"servers": {
+		"leanspec": {
+			"command": "npx",
+			"args": [
+				"-y",
+				"@leanspec/mcp"
+			],
+			"type": "stdio"
+		}
+	},
+	"inputs": []
+}

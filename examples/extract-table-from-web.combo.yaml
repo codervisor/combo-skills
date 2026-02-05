@@ -1,0 +1,83 @@
+# Example: Extract Table from Web
+#
+# This combo skill demonstrates composing multiple atomic skills
+# to accomplish a common data extraction workflow.
+#
+# Use case: You have a URL pointing to a web page with tabular data
+# and you want to extract it as structured CSV.
+
+name: extract-table-from-web
+version: "0.1.0"
+
+description: |
+  Extract structured table data from a web page and convert it to CSV format.
+  Handles standard HTML tables and can follow pagination if present.
+  Useful for scraping public data tables, price lists, or documentation tables.
+
+skills:
+  - name: fetch-webpage
+    from: skills.sh
+    alias: fetch
+
+  - name: parse-html
+    from: skills.sh
+    alias: parse
+
+  - name: extract-table
+    from: skills.sh
+    alias: extract
+
+  - name: convert-to-csv
+    from: skills.sh
+    alias: csv
+
+intent: |
+  Given a URL, fetch the web page content, parse its HTML structure,
+  locate and extract table elements, and convert the extracted data
+  to CSV format.
+
+  The skill should:
+  1. Handle HTTP errors gracefully (404, 500, timeouts)
+  2. Support tables with headers (thead) and without
+  3. Preserve column ordering from the original table
+  4. Escape CSV special characters properly
+  5. Optionally follow pagination to collect multi-page tables
+
+  The output should be valid CSV that can be opened in any spreadsheet application.
+
+constraints:
+  ordering:
+    - fetch -> parse
+    - parse -> extract
+    - extract -> csv
+
+  assumptions:
+    - Tables use standard HTML <table>, <tr>, <td>, <th> elements
+    - The target page is publicly accessible (no authentication)
+    - Table data is text-based (images in cells are ignored)
+    - Pagination, if present, uses recognizable link patterns
+
+  data_flow:
+    - from: fetch
+      to: parse
+      mapping:
+        html_content: input_html
+
+    - from: parse
+      to: extract
+      mapping:
+        dom_tree: document
+
+    - from: extract
+      to: csv
+      mapping:
+        table_data: rows
+
+metadata:
+  author: combo-skills
+  tags:
+    - web-scraping
+    - data-extraction
+    - csv
+    - tables
+  license: MIT

@@ -1,0 +1,125 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/codervisor/combo-skills/schemas/combo-skill.schema.json",
+  "title": "Combo Skill Definition",
+  "description": "Schema for defining combo skills that compose multiple existing skills",
+  "type": "object",
+  "required": ["name", "description", "skills", "intent"],
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Unique identifier for the combo skill",
+      "pattern": "^[a-z][a-z0-9-]*$",
+      "minLength": 2,
+      "maxLength": 64
+    },
+    "description": {
+      "type": "string",
+      "description": "Human-readable description of what the combo skill does",
+      "minLength": 10,
+      "maxLength": 1000
+    },
+    "version": {
+      "type": "string",
+      "description": "Semantic version of the combo skill definition",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "default": "0.1.0"
+    },
+    "skills": {
+      "type": "array",
+      "description": "List of skills that compose this combo skill",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["name"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Name of the skill as it appears in the registry"
+          },
+          "from": {
+            "type": "string",
+            "description": "Registry or source of the skill",
+            "default": "skills.sh"
+          },
+          "version": {
+            "type": "string",
+            "description": "Optional version constraint for the skill"
+          },
+          "alias": {
+            "type": "string",
+            "description": "Local alias for referencing this skill in constraints"
+          }
+        }
+      }
+    },
+    "intent": {
+      "type": "string",
+      "description": "Natural language description of the composition intent",
+      "minLength": 20
+    },
+    "constraints": {
+      "type": "object",
+      "description": "Explicit constraints on how skills are composed",
+      "properties": {
+        "ordering": {
+          "type": "array",
+          "description": "Explicit ordering relationships between skills",
+          "items": {
+            "type": "string",
+            "description": "Ordering expression, e.g., 'skill-a -> skill-b'"
+          }
+        },
+        "assumptions": {
+          "type": "array",
+          "description": "Domain assumptions the combo skill relies on",
+          "items": {
+            "type": "string"
+          }
+        },
+        "data_flow": {
+          "type": "array",
+          "description": "Explicit data flow between skills",
+          "items": {
+            "type": "object",
+            "properties": {
+              "from": {
+                "type": "string",
+                "description": "Source skill name or alias"
+              },
+              "to": {
+                "type": "string",
+                "description": "Target skill name or alias"
+              },
+              "mapping": {
+                "type": "object",
+                "description": "Output-to-input field mapping",
+                "additionalProperties": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Additional metadata for the combo skill",
+      "properties": {
+        "author": {
+          "type": "string"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "license": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}
